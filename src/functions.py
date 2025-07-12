@@ -1,5 +1,6 @@
 from htmlnode import LeafNode
 from textnode import TextType, TextNode
+import re 
 
 def text_node_to_html_node(text_node):
     if text_node.text_type == TextType.TEXT:
@@ -37,3 +38,63 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
                 else:  # Odd index = delimited text
                     result.append(TextNode(part, text_type))
     return result
+
+def extract_markdown_images(text):
+    matches = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+    return matches
+
+def extract_markdown_links(text):
+    matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+    return matches
+
+
+
+def split_nodes_image(old_nodes):
+    node_result_list = []
+    for node in old_nodes:
+        images = extract_markdown_images(node.text)
+
+        if not images:
+            node_result_list.append(node)
+            continue
+        
+        whole_text = node.text
+        
+        for image in images:
+            cut = whole_text.split(f"![{image[0]}]({image[1]})")
+            if cut[0]:
+                node_result_list.append(TextNode(cut[0], TextType.TEXT))
+            node_result_list.append(TextNode(image[0] ,TextType.IMAGE, image[1]))
+            whole_text = whole_text.split(f"{cut[0]}![{image[0]}]({image[1]})")[1]
+        
+        if whole_text != "":
+            node_result_list.append(TextNode(whole_text, TextType.TEXT))
+    
+    return node_result_list
+    
+
+
+
+def split_nodes_link(old_nodes):
+    node_result_list = []
+    for node in old_nodes:
+        links = extract_markdown_links(node.text)
+
+        if not links:
+            node_result_list.append(node)
+            continue
+        
+        whole_text = node.text
+        
+        for link in links:
+            cut = whole_text.split(f"[{link[0]}]({link[1]})")
+            if cut[0]:
+                node_result_list.append(TextNode(cut[0], TextType.TEXT))
+            node_result_list.append(TextNode(link[0] ,TextType.LINK, link[1]))
+            whole_text = whole_text.split(f"{cut[0]}[{link[0]}]({link[1]})")[1]
+        
+        if whole_text != "":
+            node_result_list.append(TextNode(whole_text, TextType.TEXT))
+        
+    return node_result_list
+
