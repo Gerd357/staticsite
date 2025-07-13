@@ -2,6 +2,9 @@ from htmlnode import LeafNode , HTMLNode, ParentNode
 from textnode import TextType, TextNode
 from markdown_blocks import block_to_block_type, BlockType, markdown_to_blocks
 import re 
+import os 
+import shutil
+
 
 def text_node_to_html_node(text_node):
     if text_node.text_type == TextType.TEXT:
@@ -193,3 +196,20 @@ def markdown_to_html_node(markdown):
         html_blocks.append(block_html)
     
     return HTMLNode("div", None, html_blocks)
+
+
+def copy_static_public(source, destination):
+    files_to_copy = os.listdir(source)
+        
+    for file in files_to_copy:
+        full_path = os.path.join(source, file)
+
+        if os.path.isfile(full_path):
+            shutil.copy(full_path, destination)
+            print(os.path.join(destination, file))
+        else:
+            new_dir_path = os.path.join(destination, file)
+            os.mkdir(new_dir_path)
+            copy_static_public(full_path, new_dir_path)
+
+        
