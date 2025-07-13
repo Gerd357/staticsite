@@ -130,13 +130,13 @@ def markdown_to_html_node(markdown):
             if block_type == BlockType.PARAGRAPH:
                 block_tag = "p"
                 list_children = text_to_children(block) 
-                block_html = HTMLNode(block_tag, None, list_children)
+                block_html = ParentNode(block_tag, list_children)
 
             if block_type == BlockType.HEADING:
                 block_tag = "h" + str(len(block) - len(block.lstrip("#"))) 
                 block_text = block.lstrip("#").lstrip()
                 list_children = text_to_children(block_text)
-                block_html = HTMLNode(block_tag, None, list_children)
+                block_html = ParentNode(block_tag, list_children)
 
             if block_type == BlockType.QUOTE:
                 block_tag = "blockquote"
@@ -148,7 +148,7 @@ def markdown_to_html_node(markdown):
                 block_text = "\n".join(complete)
 
                 list_children = text_to_children(block_text)
-                block_html = HTMLNode(block_tag, None, list_children)
+                block_html = ParentNode(block_tag, list_children)
 
 
             if block_type == BlockType.ULIST:
@@ -167,9 +167,9 @@ def markdown_to_html_node(markdown):
 
                 for item in list_nodes:
                     list_children = text_to_children(item)
-                    html_element_list.append(HTMLNode("li", None, list_children))
+                    html_element_list.append(ParentNode("li", list_children))
 
-                block_html = HTMLNode("ul", None, html_element_list)
+                block_html = ParentNode("ul", html_element_list)
                 
             if block_type == BlockType.OLIST:
                 block_tag = "ol"
@@ -182,20 +182,20 @@ def markdown_to_html_node(markdown):
                         list_nodes.append(item.lstrip(str(counter) + ". "))
                 for item in list_nodes:
                     list_children = text_to_children(item)
-                    html_element_list.append(HTMLNode("li", None, list_children)) 
+                    html_element_list.append(ParentNode("li", list_children)) 
                 
-                block_html = HTMLNode("ol", None, html_element_list)
+                block_html = ParentNode("ol", html_element_list)
         else:
             block_tag = "pre"
             code_tag = "code"
             block_text = block.strip("```")
             text_node = TextNode(block_text, TextType.CODE)
             code_html = text_node_to_html_node(text_node)
-            block_html = HTMLNode(block_tag, None, [code_html])
+            block_html = ParentNode(block_tag, [code_html])
 
         html_blocks.append(block_html)
     
-    return HTMLNode("div", None, html_blocks)
+    return ParentNode("div", html_blocks)
 
 
 def copy_static_public(source, destination):
@@ -212,4 +212,63 @@ def copy_static_public(source, destination):
             os.mkdir(new_dir_path)
             copy_static_public(full_path, new_dir_path)
 
-        
+def extract_title(markdown):
+    split_text = markdown.split("\n")
+    header = ""
+
+    for line in split_text:
+        if line.startswith("# "):
+            header = line[2:].strip()
+            break
+    if header == "":
+        raise Exception("no header found")
+    return header
+
+
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to dest_path using {template_path}")
+    
+    from_path_contents = ""
+    template_path_contents = ""
+    
+    
+    with open(from_path, "r") as file:
+        from_path_contents = file.read()
+
+    with open(template_path, "r") as file:
+        template_path_contents = file.read()
+
+
+    html_string = markdown_to_html_node(from_path_contents).to_html()
+    page_title = extract_title(from_path_contents)
+    full_page = template_path_contents.replace("{{ Title }}", f"{page_title}").replace("{{ Content }}", f"{html_string}")
+
+    dir_path = os.path.dirname(dest_path)
+    if dir_path and not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    with open(dest_path, "w") as file:
+        file.write(full_page)
+    
+
+def find_md(file_path, list = None):
+    if list == None:
+        list = []
+
+    if os.path.isfile(file_path) and file_path.endswith(".md"):
+        print(f"Found markdown file: {file_path}") # <-- Add this line!
+        list.append(file_path)
+    
+    if os.path.isdir(file_path):
+        file_list = os.listdir(file_path)
+
+        for file in file_list:
+            new_file_path = os.path.join(file_path, file)
+
+            if os.path.isfile(new_file_path) and new_file_path.endswith(".md"):
+                print(f"Found markdown file: {new_file_path}") # <--- Add this one here!
+                list.append(new_file_path)
+            if os.path.isdir(new_file_path):
+                find_md(new_file_path, list) 
+    return list
