@@ -7,7 +7,6 @@ def main():
     destination = "public"
     content = "content"
     page_list = find_md(content)
-    print(page_list)
     
     if os.path.exists(destination):
         shutil.rmtree(destination)

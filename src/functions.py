@@ -257,7 +257,6 @@ def find_md(file_path, list = None):
         list = []
 
     if os.path.isfile(file_path) and file_path.endswith(".md"):
-        print(f"Found markdown file: {file_path}") # <-- Add this line!
         list.append(file_path)
     
     if os.path.isdir(file_path):
@@ -267,7 +266,6 @@ def find_md(file_path, list = None):
             new_file_path = os.path.join(file_path, file)
 
             if os.path.isfile(new_file_path) and new_file_path.endswith(".md"):
-                print(f"Found markdown file: {new_file_path}") # <--- Add this one here!
                 list.append(new_file_path)
             if os.path.isdir(new_file_path):
                 find_md(new_file_path, list) 
