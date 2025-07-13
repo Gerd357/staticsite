@@ -106,3 +106,16 @@ def text_to_textnodes(text):
     fourth = split_nodes_delimiter(third, "_", TextType.ITALIC)
     fifth = split_nodes_delimiter(fourth, "`", TextType.CODE)
     return fifth
+
+
+def markdown_to_blocks(markdown):
+    new_list = []
+    text = markdown.strip()
+    split_text = text.split("\n\n")
+
+    for item in split_text:
+        item = item.strip()
+        
+        if item != "":
+            new_list.append(item)
+    return new_list
