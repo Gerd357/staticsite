@@ -226,7 +226,7 @@ def extract_title(markdown):
 
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to dest_path using {template_path}")
     
     from_path_contents = ""
@@ -243,6 +243,9 @@ def generate_page(from_path, template_path, dest_path):
     html_string = markdown_to_html_node(from_path_contents).to_html()
     page_title = extract_title(from_path_contents)
     full_page = template_path_contents.replace("{{ Title }}", f"{page_title}").replace("{{ Content }}", f"{html_string}")
+    full_page = full_page.replace('href="/', f'href="{basepath}')
+    full_page = full_page.replace('src="/', f'src="{basepath}')
+
 
     dir_path = os.path.dirname(dest_path)
     if dir_path and not os.path.exists(dir_path):
